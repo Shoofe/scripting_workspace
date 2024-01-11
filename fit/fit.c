@@ -29,7 +29,7 @@
  */
 
 #include<stdio.h>
-
+#include<string.h>
 #define MAX_EX 32
 #define EX_FILE "excercises.txt"
 #define STATS_FILE "stats.txt"
@@ -47,7 +47,7 @@ struct Ex{
 	char type[MAX_TYPE];
 	int  diff;
 	int  max_reps;
-}
+};
 
 /* 
  * Reads the excercises from the file EX_FILE and returns them as an array of structs Ex.
@@ -55,17 +55,39 @@ struct Ex{
  * and writes the default excercises into EX_FILE, and initializes STATS_FILE, then returns 
  * the array of structs Ex.
  */
-struct Ex* readExcercises(){
+ struct Ex* readExcercises(){
 	//Check if file EX_FILE exists to be read, and initialize with excercises if not.
 	
 	FILE* ex_file = fopen(EX_FILE, "r");
 	
 	if (ex_file == NULL){
 		printf("\nFile %s not found, Initializing...", EX_FILE);
-	}else{
-		printf("\nFile %s exist, trying to read...", EX_FILE);
-	}
+		
 
+		//Load defaults into the file, then read from it.
+		ex_file = fopen(EX_FILE, "w");
+		fprintf(ex_file, "Pushups, Arms/back, 7, 0\nSitups, Abs, 4, 0\nSquats, Legs, 4, 0\nStretching, Stretching, 0, 0");
+
+	}
+	printf("\nFile %s exist, trying to read...", EX_FILE);
+	//Free file so we can read from it.
+	
+	fclose(ex_file);
+	ex_file = fopen(EX_FILE, "r");
+
+	struct Ex excercises[MAX_EX];
+	struct Ex excercise;
+	for(int i = 0; i < MAX_EX; i++){
+		memset(&excercise, 0, sizeof(excercise));
+		fscanf(ex_file, "%63[^|\n] | %63[^|\n] | %d | %d", excercise.name, excercise.type, excercise.diff, excercise.max_reps);
+		if (strlen(excercise.name) < 1) break;
+	}	
+
+
+
+
+	
+		
 	//Check if file STATS_FILE exist and initialize if neccessary.
 	
 	FILE* stats_file = fopen(STATS_FILE, "r");
@@ -74,18 +96,19 @@ struct Ex* readExcercises(){
 		printf("\nFile %s not found, Initializing...", STATS_FILE);
 	}else{
 		printf("\nFile %s exist, trying to read...", STATS_FILE);
+		
+		//Free file
+		fclose(stats_file);
 	}
 
-	//Free both files.
+
 	
-	fclose(ex_file);
-	fclose(stats_file);
 }
 
 
 
 int main(){
-	
+	readExcercises();
 
 
 

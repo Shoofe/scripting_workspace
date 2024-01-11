@@ -103,7 +103,7 @@ int readFile(struct Task *tasks){
 		//Loading elements into the array.
 		for (int i = 0; i < number_of_elements; i++){
 			
-			fscanf(file, " %19[^|\n]| %99[^|\n]|%d", tasks[i].title, tasks[i].desc, &tasks[i].priority);
+			fscanf(file, " %19[^|\n]| %1023[^|\n]|%d", tasks[i].title, tasks[i].desc, &tasks[i].priority);
 			tasks[i].title[strcspn(tasks[i].title, "\n")] = '\0';
 			tasks[i].desc[strcspn(tasks[i].desc, "\n")] = '\0';
 		}

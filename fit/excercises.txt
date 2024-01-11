@@ -1,0 +1,4 @@
+Pushups, Arms/back, 7, 0
+Situps, Abs, 4, 0
+Squats, Legs, 4, 0
+Stretching, Stretching, 0, 0

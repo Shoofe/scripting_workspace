@@ -1,1 +1,2 @@
-0
+1
+Fitness app|Create a simple fitness~app which runs in-terminal and generates~random excercise plans randomly.|5
