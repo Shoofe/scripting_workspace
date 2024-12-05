@@ -44,7 +44,12 @@ typedef struct {
 //TODO
 //
 //Edit/remove subject/exam
+//Print exams on printSubjects screen
 //
+//Error handling:
+//Adding a date that's not possible (i.e. 99,99,99)
+//Adding large strings doesn't overflow or segfaults, but it also doesn't save the strings
+//First string read is not read for some reason
 
 
 //Read/write files
