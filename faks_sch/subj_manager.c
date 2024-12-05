@@ -13,8 +13,8 @@
 
 
 //I like having fake lag so the program doesn't whiplash me b/c it's so fast
-#define FAKE_LAG_DEV  200000
-#define FAKE_LAG_ADD  50000
+#define FAKE_LAG_DEV  150000
+#define FAKE_LAG_ADD  40000
 #define FAKE_LAG_SPI  5
 #define FAKE_LAG      1
 
@@ -43,7 +43,8 @@ typedef struct {
 
 //TODO
 //
-//Add error handling
+//Edit/remove subject/exam
+//
 
 
 //Read/write files
@@ -68,11 +69,13 @@ void sortByDate(Exam *exams);
 
 int addExam(Exam *exams);
 
+int addSubject(Subject *subjects);
+
 char* readString(int max_size);
 
 int readInt();
 
-
+void awaitReturn(char *message);
 
 //Screen
 //void printScreen(Exam *exams, Subject *subjects);
@@ -85,7 +88,6 @@ void printSubjects(Exam *exams, Subject *subjects);
 
 void clearScreen();
 
-//TODO
 //Returns a command in char format
 //h - help
 //q - quit
@@ -103,24 +105,38 @@ char parseCommand();
 int main(){
 	
 	Subject subjects[100];
+	memset(subjects, 0, sizeof(subjects));
 	Exam exams[100];
 	memset(exams, 0, sizeof(exams));
 	readExams(exams);
 	readSubjects(subjects);
-
+	sortByDate(exams);
 	char main_loop = 'o';
+	awaitReturn("Press return key to continue...");
+	clearScreen();
 	while (main_loop != 'q'){
 		main_loop = parseCommand();			
 	
 		switch (main_loop){
 			case 'e':
+				printExams(exams,subjects);
 				addExam(exams);
 				break;
 	
+			case 's':
+				printSubjects(exams,subjects);
+				addSubject(subjects);
+				break;
+			
 			case '[':
 				printExams(exams,subjects);
 				break;
-	
+			
+			case ']':
+				printSubjects(exams,subjects);
+				break;
+
+
 			case 'c':
 				clearScreen();
 				break;
@@ -128,16 +144,22 @@ int main(){
 		}	
 	
 	}
-
+	sortByDate(exams);
 	writeSubjects(subjects);
 	writeExams(exams);
-	
+	clearScreen();
 	return 0;
 }
 
 
 
+void awaitReturn(char *message){
 
+
+	printf("%s\n", message);	
+	while(fgetc(stdin) != '\n');
+
+}
 
 void clearScreen(){
 	printf("\e[1;1H\e[2J");
@@ -158,7 +180,7 @@ void clearScreen(){
 //o - blank
 
 char parseCommand(){
-	printf("Enter the command:\n>");
+	printf(">");
 	char *command = readString(16);
 
 
@@ -207,9 +229,8 @@ char* getDate(int date){
 }
 
 void printExams(Exam *exams, Subject *subjects){
-	int curr = 0;
 	
-	printf("\n|%-17s|#|%-9s|#|%-17s|#|%-32s|#|%-4s|#|%-4s|#|%-4s|\n",
+	printf("####|%-17s|#|%-9s|#|%-17s|#|%-32s|#|%-4s|#|%-4s|#|%-4s|\n",
 		        	"Type",		
                         	"Date",
                         	"Code",
@@ -217,12 +238,12 @@ void printExams(Exam *exams, Subject *subjects){
 	                	"Max",
                         	"Pts",
                         	"P?");
-
-	
 	char *temp;
-	while(exams[curr].date != 0){
-		printf("|%-17s|#|%-9s|#|%-17s|#|%-32s|#|%-4d|#|%-4d|#|%-4d|\n",
-			        	exams[curr].type,         
+	int curr = 0;
+	while(exams[curr].date > 0){
+		printf("%-3d#|%-17s|#|%-9s|#|%-17s|#|%-32s|#|%-4d|#|%-4d|#|%-4d|\n",
+			   		curr + 1,
+					exams[curr].type,         
                 	        	temp = getDate(exams[curr].date),
                         		exams[curr].subject_code,
                         		exams[curr].topic,
@@ -231,12 +252,34 @@ void printExams(Exam *exams, Subject *subjects){
                         		exams[curr].passed);
 		curr++;
 	}
-	printf("\n\n");
-	free(temp);
-
+	printf("###############################################################################################################");
+	printf("\n");
+	if (curr != 0) free(temp);
 }
 
-void printSubject(Exam *exams, Subject *subjects){
+
+
+
+
+void printSubjects(Exam *exams, Subject *subjects){
+	
+	printf("####|%-33s|#|%-17s|#|%-32s|#|%-4s|\n",	
+				"Name",
+				"Code name",
+				"Professor",
+				"ESPB");
+	int curr = 0;
+	while(subjects[curr].ESPB != 0){
+		printf("%-3d#|%-33s|#|%-17s|#|%-32s|#|%-4d|\n",
+					curr + 1,
+					subjects[curr].name,					
+					subjects[curr].code_name,				
+					subjects[curr].professor,			
+					subjects[curr].ESPB);			
+				curr++;
+	}
+	printf("#####################################################################################################");
+	printf("\n");
 	return;
 
 }
@@ -298,14 +341,38 @@ int readInt(){
 
 }
 
+int addSubject(Subject *subjects){
+	//Find space for the next exam
+	int n = 0;
+	while (subjects[n].ESPB != 0) n++;
+	
+	printf("Available subject slot: %d, press return to continue...\n", n + 1);
+	while(fgetc(stdin) != '\n');
+
+	
+	printf("Enter the name of the subject (Max %d characters)\n>", sizeof(subjects[n].name));
+	strcpy(subjects[n].name,readString(sizeof(subjects[n].name)));	
+	
+	printf("Enter the code name of the subject (Max %d characters)\n>", sizeof(subjects[n].code_name));
+	strcpy(subjects[n].code_name,readString(sizeof(subjects[n].code_name)));
+
+	printf("Enter the name of the professor of the subject (Max %d characters)\n>", sizeof(subjects[n].professor));
+	strcpy(subjects[n].professor,readString(sizeof(subjects[n].professor)));
+		
+	printf("Enter subject ESPB)\n>");
+	subjects[n].ESPB = readInt();
+	
+	return 0;
+}
+
 int addExam(Exam *exams){
 	//Find space for the next exam
 	int n = 0;
 	while (exams[n].date != 0) n++;
 	
-	printf("Available exam slot: %d, press return to continue...\n", n);
+	printf("Available exam slot: %d, press return to continue...\n", n + 1);
 	while(fgetc(stdin) != '\n');
-
+	
 	printf("Enter the type of the exam: (Max %d characters)\n>", sizeof(exams[n].type));
 	strcpy(exams[n].type,readString(sizeof(exams[n].type)));
 		
@@ -523,7 +590,12 @@ int writeSubjects(Subject *subjects){
 	
 	}
 	for(int x = 0; subjects[x].ESPB != 0; x++){
-		fprintf(file,"%s,%s,%s,%d\n", subjects[x].name, subjects[x].code_name, subjects[x].professor, subjects[x].ESPB);	
+		fprintf(file,"%s,%s,%s,%d\n",
+			       subjects[x].name, 
+			       subjects[x].code_name, 
+			       subjects[x].professor, 
+			       subjects[x].ESPB);	
+		
 		printf("Written subject %s\n", subjects[x].code_name);
 		usleep(FAKE_LAG * ((rand() % FAKE_LAG_DEV) + FAKE_LAG_ADD * (rand() % FAKE_LAG_SPI)));
 	}
