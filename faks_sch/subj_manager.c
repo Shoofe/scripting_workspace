@@ -42,12 +42,10 @@ typedef struct {
 
 
 //TODO
-//
 //Edit/remove subject/exam
 //Print exams on printSubjects screen
 //
 //Error handling:
-//Adding a date that's not possible (i.e. 99,99,99)
 //Adding large strings doesn't overflow or segfaults, but it also doesn't save the strings
 //First string read is not read for some reason
 
@@ -78,7 +76,7 @@ int addSubject(Subject *subjects);
 
 char* readString(int max_size);
 
-int readInt();
+int readInt(int check_date);
 
 void awaitReturn(char *message);
 
@@ -108,16 +106,21 @@ char parseCommand();
 
 
 int main(){
-	
+
 	Subject subjects[100];
 	memset(subjects, 0, sizeof(subjects));
+	
 	Exam exams[100];
 	memset(exams, 0, sizeof(exams));
+	
 	readExams(exams);
 	readSubjects(subjects);
+	
 	sortByDate(exams);
-	char main_loop = 'o';
+	
 	awaitReturn("Press return key to continue...");
+	
+	char main_loop = 'o';
 	clearScreen();
 	while (main_loop != 'q'){
 		main_loop = parseCommand();			
@@ -159,7 +162,6 @@ int main(){
 
 
 void awaitReturn(char *message){
-
 
 	printf("%s\n", message);	
 	while(fgetc(stdin) != '\n');
@@ -235,7 +237,7 @@ char* getDate(int date){
 
 void printExams(Exam *exams, Subject *subjects){
 	
-	printf("####|%-17s|#|%-9s|#|%-17s|#|%-32s|#|%-4s|#|%-4s|#|%-4s|\n",
+	printf("----|%-17s|-|%-9s|-|%-17s|-|%-32s|-|%-4s|-|%-4s|-|%-4s|\n",
 		        	"Type",		
                         	"Date",
                         	"Code",
@@ -243,10 +245,11 @@ void printExams(Exam *exams, Subject *subjects){
 	                	"Max",
                         	"Pts",
                         	"P?");
+	printf("---------------------------------------------------------------------------------------------------------------\n");
 	char *temp;
 	int curr = 0;
 	while(exams[curr].date > 0){
-		printf("%-3d#|%-17s|#|%-9s|#|%-17s|#|%-32s|#|%-4d|#|%-4d|#|%-4d|\n",
+		printf("%-3d-|%-17s|-|%-9s|-|%-17s|-|%-32s|-|%-4d|-|%-4d|-|%-4d|\n",
 			   		curr + 1,
 					exams[curr].type,         
                 	        	temp = getDate(exams[curr].date),
@@ -257,7 +260,7 @@ void printExams(Exam *exams, Subject *subjects){
                         		exams[curr].passed);
 		curr++;
 	}
-	printf("###############################################################################################################");
+	printf("---------------------------------------------------------------------------------------------------------------");
 	printf("\n");
 	if (curr != 0) free(temp);
 }
@@ -268,14 +271,15 @@ void printExams(Exam *exams, Subject *subjects){
 
 void printSubjects(Exam *exams, Subject *subjects){
 	
-	printf("####|%-33s|#|%-17s|#|%-32s|#|%-4s|\n",	
+	printf("----|%-33s|-|%-17s|-|%-32s|-|%-4s|\n",	
 				"Name",
 				"Code name",
 				"Professor",
 				"ESPB");
+	printf("-----------------------------------------------------------------------------------------------------\n");
 	int curr = 0;
 	while(subjects[curr].ESPB != 0){
-		printf("%-3d#|%-33s|#|%-17s|#|%-32s|#|%-4d|\n",
+		printf("%-3d-|%-33s|-|%-17s|-|%-32s|-|%-4d|\n",
 					curr + 1,
 					subjects[curr].name,					
 					subjects[curr].code_name,				
@@ -283,7 +287,7 @@ void printSubjects(Exam *exams, Subject *subjects){
 					subjects[curr].ESPB);			
 				curr++;
 	}
-	printf("#####################################################################################################");
+	printf("-----------------------------------------------------------------------------------------------------");
 	printf("\n");
 	return;
 
@@ -320,23 +324,48 @@ char* readString(int max_size){
 } 
 
 
-int readInt(){
+int readInt(int check_date){
 	
+	int err = 0;	
 	int num = 0;
-	int res = scanf("%d", &num);
+
+	do {
+		err = 0;
+		int res = scanf("%d", &num);
+		//Error end of file
+		if (res == EOF) {
+			printf("Error reading integer, try again\n>");
+			err = 1;
+		}
+		//Clear if no int is found
+		if (res == 0) {
+			while(fgetc(stdin) != '\n');
+			printf("Error reading integer, try again\n>");
+			err = 1;
+		}
+		//Check for valid date
+		if (check_date){
+			
+			if (num < 100000 || num > 999999) err = 1;
 	
-	//Error end of file
-	if (res == EOF) {
-		printf("Error reading integer\n");
-		return -1;
-	}
-	//Clear if no int is found
-	if (res == 0) {
-		while(fgetc(stdin) != '\n');
-		printf("Error reading integer\n");
-		return -1;
-	}
+			
+			int year = num % 100;
+			int month = (num / 100) % 100;
+			int day = (num / 10000) % 100;
+			int is_leap_year = (year % 4 == 0);
+		    	printf("%d,%d,%d, leap year - %d  :", day, month, year, is_leap_year);	
+			
+			if (month > 12 || month < 1) err = 1; 							//Month over 12
+			if (day > 31 || day < 1) err = 1;							//Day over 31
+			if ((day > 29) && (month == 2)) err = 1; 						//Check february 
+			if ((day == 29) && (month == 2) && !is_leap_year) err = 1; 				//Check leap february 
+			if ((day == 31) && (month == 4 || month == 6 || month == 9 || month == 11)) err = 1;  	//Check day
+			
+			if (err) printf(" is invalid date, try again\n>");
+				
+		}
 	
+	}while (err);	
 	usleep(FAKE_LAG * ((rand() % FAKE_LAG_DEV) + FAKE_LAG_ADD * (rand() % FAKE_LAG_SPI)));
 	printf("Read:%d\n", num);
 	while(fgetc(stdin) != '\n');
@@ -365,7 +394,7 @@ int addSubject(Subject *subjects){
 	strcpy(subjects[n].professor,readString(sizeof(subjects[n].professor)));
 		
 	printf("Enter subject ESPB)\n>");
-	subjects[n].ESPB = readInt();
+	subjects[n].ESPB = readInt(0);
 	
 	return 0;
 }
@@ -382,7 +411,7 @@ int addExam(Exam *exams){
 	strcpy(exams[n].type,readString(sizeof(exams[n].type)));
 		
 	printf("Enter the date of the exam: (Format: ddmmyy)\n>");
-	exams[n].date = readInt();
+	exams[n].date = readInt(1);
 	
 	printf("Enter the subject code of the exam: (Max %d characters)\n>", sizeof(exams[n].subject_code));
 	strcpy(exams[n].subject_code,readString(sizeof(exams[n].subject_code)));
@@ -391,13 +420,13 @@ int addExam(Exam *exams){
 	strcpy(exams[n].topic,readString(sizeof(exams[n].topic)));
 
 	printf("Enter the max points possible for the exam\n>");
-	exams[n].max_points = readInt();
+	exams[n].max_points = readInt(0);
 		
 	printf("Enter the achieved points of the exam\n>");
-	exams[n].points = readInt();
+	exams[n].points = readInt(0);
 	
 	printf("Is the exam passed? yes = 1, no = 0\n>");
-	exams[n].passed = readInt();
+	exams[n].passed = readInt(0);
 	
 
 
