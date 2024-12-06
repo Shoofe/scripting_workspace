@@ -295,27 +295,31 @@ void printSubjects(Exam *exams, Subject *subjects){
 
 char* readString(int max_size){
 
-
+	int err = 0;
 	if (max_size < 1) max_size = 1;
 	if (max_size > BUFFER_SIZE) max_size = BUFFER_SIZE;
 
 	char out[max_size + 1];
-	
-	if (fgets(out, sizeof(out), stdin) != NULL){
-	
-		int length = strlen(out);
-		if (length > 0 && out[length - 1] == '\n'){
-			out[length - 1] = '\0';
+
+	do{	
+		err = 0;
+		if (fgets(out, sizeof(out), stdin) != NULL){
+		
+			int length = strlen(out);
+			if (length > 0 && out[length - 1] == '\n'){
+				out[length - 1] = '\0';
+			}
+			else{
+				printf("Max length of %d exceeded, press return to continue...", max_size);
+				awaitReturn("\n");
+				err = 1;
+				out[0] = '\0';
+			}
 		}
-		else{
-			printf("Error inputing string, max length is %d\n", max_size);
-			strcmp(out, "-1");		
-		}
-	}
-	
+	}while(err);
 	
 //	if (out[strlen(out) - 1] != '\0') out[strlen(out) - 1] = '\0';
-		
+	printf("Error: %d", err);	
 
 	usleep(FAKE_LAG * ((rand() % FAKE_LAG_DEV) + FAKE_LAG_ADD * (rand() % FAKE_LAG_SPI)));
 	char *output = out;
