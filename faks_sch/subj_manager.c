@@ -18,7 +18,7 @@
 #define FAKE_LAG_SPI  5
 #define FAKE_LAG      1
 
-
+//Lool
 //Subject struct
 typedef struct {
 	char name[32];
